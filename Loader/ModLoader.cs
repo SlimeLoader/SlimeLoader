@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using log4net;
 
 namespace SlimeLoader.Loader {
+	// TODO: convert pseudocode
 	public static class ModLoader {
 		public static readonly ILog log = LogManager.GetLogger(typeof(ModLoader));
 
