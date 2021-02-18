@@ -2,17 +2,24 @@
 using System.IO;
 using Semver;
 using log4net;
+using System.Reflection;
+using SlimeLoader.Loader.Entrypoint;
 
 namespace SlimeLoader.Loader {
 	public class Mod {
-		public FileStream File { get; internal set; }
 		public string Id { get => info.id; }
 		public SemVersion Version { get; internal set; }
 
-		private ModInfo info;
+		internal ModInfo info;
+		internal Assembly ModAsm { get; private set; }
+		internal ModEntrypoint Entrypoint { get; private set; }
 
-		public Mod(ModInfo info) {
+		public Mod(ModInfo info, Assembly modAsm) {
 			this.info = info;
+			// FIXME: don't initialize the target entrypoint until it's proven to be valid
+			try {
+				Entrypoint = (ModEntrypoint) modAsm.GetType(info.entrypoint).TypeInitializer.Invoke(null);
+			} catch (TypeLoadException) { }
 
 			// parse semver version
 			// if invalid semver, print warning
