@@ -9,6 +9,7 @@ namespace SlimeLoader.Loader {
 	public class Mod {
 		public string Id { get => info.id; }
 		public SemVersion Version { get; internal set; }
+		public ModDependencies Dependencies { get; internal set; }
 
 		internal ModInfo info;
 		internal Assembly ModAsm { get; private set; }
@@ -18,7 +19,9 @@ namespace SlimeLoader.Loader {
 			this.info = info;
 			// FIXME: don't initialize the target entrypoint until it's proven to be valid
 			try {
-				Entrypoint = (ModEntrypoint) modAsm.GetType(info.entrypoint).TypeInitializer.Invoke(null);
+				var type = modAsm.GetType(info.entrypoint);
+				//Entrypoint = (ModEntrypoint) modAsm.GetType(info.entrypoint).TypeInitializer.Invoke(null);
+				Entrypoint = (ModEntrypoint) modAsm.CreateInstance(type.FullName);
 			} catch (TypeLoadException) { }
 
 			// parse semver version

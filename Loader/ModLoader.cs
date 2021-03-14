@@ -8,16 +8,18 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using log4net;
 using SlimeLoader.Loader.Entrypoint;
+using Semver;
 
 namespace SlimeLoader.Loader {
 	// TODO: convert pseudocode
 	public static class ModLoader {
+		private const string ModsPath = "../../Mods";
 		public static readonly ILog log = LogManager.GetLogger(typeof(ModLoader));
 
-		public static List<Mod> Mods { get; internal set; }
+		public static Dictionary<string, Mod> Mods { get; internal set; }
 
 		public static void Init() {
-			LoadMods("../../Mods");
+			LoadMods(ModsPath);
 			// load game assembly
 			try {
 				var gameAsm = Assembly.LoadFrom("Assembly-CSharp.slimeloader.dll");
@@ -27,6 +29,9 @@ namespace SlimeLoader.Loader {
 				Environment.Exit(-1);
 			}
 			// invoke "GameLoad" mod entrypoints
+			foreach (var mod in Mods.Values) {
+				mod.Entrypoint.GameLoad();
+			}
 		}
 
 		internal static void LoadMods(string modsPath) {
@@ -36,7 +41,7 @@ namespace SlimeLoader.Loader {
 			foreach (string modFile in dir) {
 				var modAsm = Assembly.LoadFrom(modFile);
 				var mod = new Mod(ReadModInfo(modFile).Result, modAsm);
-				Mods.Add(mod);
+				Mods.Add(mod.Id, mod);
 				Console.WriteLine($"Loading mod assembly {modFile}");
 				// invoke "Initialize" mod entrypoint
 				try {
@@ -44,13 +49,20 @@ namespace SlimeLoader.Loader {
 					if (!type.IsSubclassOf(typeof(ModEntrypoint))) {
 						throw new InvalidModEntrypointException(mod.Id);
 					}
-					type.GetMethod("Initialize").Invoke(null, new object[] { });
+					mod.Entrypoint.Initialize();
 				} catch (TypeLoadException) {
 					throw new InvalidModEntrypointException(mod.Id);
 				}
 			}
 
 			// handle mod dependencies
+			foreach (var mod in Mods.Values) {
+				var requires = mod.info.dependencies.requires;
+				foreach (var dep in requires.Keys) {
+					if (!Mods.ContainsKey(dep) || Mods[dep].Version >= ) {
+					}
+				}
+			}
 
 			// find and load mixins into an array (don't patch them yet)
 

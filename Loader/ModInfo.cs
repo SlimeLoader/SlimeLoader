@@ -20,6 +20,6 @@ namespace SlimeLoader.Loader {
 		[JsonRequired]
 		internal string entrypoint;
 		internal string[] mixinConfig = { };
-		internal ModDependencies dependencies;
+		internal ModDependenciesDef dependencies;
 	}
 }
